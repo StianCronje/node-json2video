@@ -57,17 +57,17 @@ services:
       - app-network
     privileged: true
 
-  test:
-    build:
-      context: .
-    container_name: test
-    command: pytest
-    volumes:
-      - .:/app
-    environment:
-      - PYTHONPATH=/app
-    networks:
-      - app-network
+  # test:
+  #   build:
+  #     context: .
+  #   container_name: test
+  #   command: pytest
+  #   volumes:
+  #     - .:/app
+  #   environment:
+  #     - PYTHONPATH=/app
+  #   networks:
+  #     - app-network
 
 networks:
   app-network:

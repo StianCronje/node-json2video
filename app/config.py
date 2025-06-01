@@ -11,6 +11,9 @@ class Config:
     CELERY_LOG_LEVEL = os.getenv('CELERY_LOG_LEVEL', 'ERROR')
     ALLOWED_DOMAINS = os.getenv('ALLOWED_DOMAINS', 'example.com,trusted.com').split(',')
     ALLOWED_IPS = {
+        'LOCAL': [
+            'localhost',
+        ],
         'MAKE_US1': [
             '54.209.79.175',
             '54.80.47.193',
