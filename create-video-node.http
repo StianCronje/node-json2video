@@ -1,0 +1,24 @@
+### Test API Key Validation
+GET http://localhost:3000/api/validate
+x-api-key: testkey
+
+### Test Health Check
+GET http://localhost:3000/health
+
+### Create Video Request
+POST http://localhost:3000/create-video
+Content-Type: application/json
+x-api-key: testkey
+
+{
+  "record_id": "test123",
+  "input_url": "https://example.com/test-image.jpg",
+  "webhook_url": "https://example.com/webhook",
+  "framerate": 30,
+  "duration": 5,
+  "cache": true,
+  "zoom": 0,
+  "crop": false,
+  "output_width": 1920,
+  "output_height": 1080
+}
