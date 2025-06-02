@@ -1,74 +1,45 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  json2video:
-    build:
-      context: .
-    container_name: json2video
-    ports:
-      - "5003:5003"
-    volumes:
-      - ./cache:/app/cache
-      - ./movies:/app/movies
-    environment:
-      - FLASK_APP=app.run
-      - PUBLIC_PORT=${MOVIES_PUBLIC_PORT}
-      - CACHE_DIR=cache
-      - MOVIES_DIR=movies
-      - DEFAULT_ZOOM=0.002
-      - SCHEME=https
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - CELERY_LOG_LEVEL=ERROR
-      - PYTHONPATH=/app
-    networks:
-      - app-network
-
-  celery_worker:
-    build:
-      context: .
-    container_name: celery_worker
-    command: celery -A app.celery_app worker --loglevel=error
-    volumes:
-      - ./cache:/app/cache
-      - ./movies:/app/movies
-    environment:
-      - FLASK_APP=app.run
-      - PUBLIC_PORT=${MOVIES_PUBLIC_PORT}
-      - CACHE_DIR=cache
-      - MOVIES_DIR=movies
-      - DEFAULT_ZOOM=0.002
-      - SCHEME=https
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - CELERY_LOG_LEVEL=ERROR
-      - PYTHONPATH=/app
-    networks:
-      - app-network
-
   redis:
-    build:
-      context: ./redis
-      dockerfile: Dockerfile.redis
-    container_name: redis
+    image: redis:7-alpine
     ports:
       - "6379:6379"
-    networks:
-      - app-network
-    privileged: true
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
 
-  # test:
-  #   build:
-  #     context: .
-  #   container_name: test
-  #   command: pytest
-  #   volumes:
-  #     - .:/app
-  #   environment:
-  #     - PYTHONPATH=/app
-  #   networks:
-  #     - app-network
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - CACHE_DIR=/usr/src/app/cache
+      - MOVIES_DIR=/usr/src/app/movies
+      - LOG_LEVEL=info
+    volumes:
+      - ./cache:/usr/src/app/cache
+      - ./movies:/usr/src/app/movies
+      - ./logs:/usr/src/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-networks:
-  app-network:
-    driver: bridge
+volumes:
+  redis_data:
