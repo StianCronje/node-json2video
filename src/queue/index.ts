@@ -68,11 +68,10 @@ async function createVideoTask(data: VideoProcessingData): Promise<void> {
   if (zoom !== 0) {
     const maxZoomRate = 0.1;
     const normalizedZoom = (zoom / 100) * maxZoomRate;
-    if (zoom > 0) {
-      zoomFilter = `,zoompan=z='min(zoom+${normalizedZoom},2)':d=1`;
-    } else {
-      zoomFilter = `,zoompan=z='max(zoom-${Math.abs(normalizedZoom)},1)':d=1`;
-    }
+    const zoomExpression = zoom > 0
+      ? `zoom+${normalizedZoom}`
+      : `zoom-${Math.abs(normalizedZoom)}`;
+    zoomFilter = `,zoompan=z='if(eq(on,1),1,${zoomExpression})':d=1:fps=${framerate}`;
   }
 
   // Build FFmpeg command
@@ -80,7 +79,7 @@ async function createVideoTask(data: VideoProcessingData): Promise<void> {
     'ffmpeg',
     '-loop', '1',
     '-i', cached_input_file,
-    '-vf', `format=yuv420p${cropFilter}${padFilter},scale=${output_width}:${output_height}`,
+    '-vf', `format=yuv420p${cropFilter}${padFilter}${zoomFilter},scale=${output_width}:${output_height}`,
     '-t', duration.toString(),
     '-pix_fmt', 'yuv420p',
     '-r', framerate.toString(),
