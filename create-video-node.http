@@ -13,7 +13,6 @@ x-api-key: testkey
 {
   "record_id": "test1234",
   "input_url": "http://localhost:5500/assets/puppy.jpg",
-  "webhook_url": "https://example.com/webhook",
   "framerate": 30,
   "duration": 5,
   "cache": true,
